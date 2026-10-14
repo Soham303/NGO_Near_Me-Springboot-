@@ -20,7 +20,6 @@ public class TagEntity {
     @Column(name = "label", nullable = false)
     private String label;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "kind", nullable = false)
     private TagKind kind;
 

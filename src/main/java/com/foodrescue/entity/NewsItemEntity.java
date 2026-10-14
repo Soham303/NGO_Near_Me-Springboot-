@@ -23,7 +23,6 @@ public class NewsItemEntity {
     @Column(name = "id", nullable = false)
     private UUID id;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "source_type", nullable = false)
     @Builder.Default
     private NewsSource sourceType = NewsSource.INTERNAL;
@@ -43,7 +42,6 @@ public class NewsItemEntity {
     @Column(name = "image_url")
     private String imageUrl;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
     private NewsStatus status = NewsStatus.PUBLISHED;

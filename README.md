@@ -30,9 +30,9 @@ Enterprise REST API backend for the **FoodRescue / NGO Near Me** surplus food re
 Copy `.env.example` or configure `src/main/resources/application.yml`:
 
 ```properties
-# Supabase PostgreSQL Database Connection
-SPRING_DATASOURCE_URL=jdbc:postgresql://db.djcwmdkenwcmsbcaqknc.supabase.co:5432/postgres?sslmode=require
-SPRING_DATASOURCE_USERNAME=postgres
+# Supabase PostgreSQL Database Connection (IPv4 Session Pooler)
+SPRING_DATASOURCE_URL=jdbc:postgresql://aws-0-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require
+SPRING_DATASOURCE_USERNAME=postgres.djcwmdkenwcmsbcaqknc
 SPRING_DATASOURCE_PASSWORD=your-supabase-db-password-here
 
 # Supabase Platform Keys

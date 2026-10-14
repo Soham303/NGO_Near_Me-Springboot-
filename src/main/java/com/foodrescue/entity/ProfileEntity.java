@@ -21,7 +21,6 @@ public class ProfileEntity {
     @Column(name = "id", nullable = false)
     private UUID id;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private UserRole role;
 

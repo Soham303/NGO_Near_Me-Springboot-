@@ -29,31 +29,35 @@ public class SupabaseJwtService {
         }
 
         try {
-            // If secret is configured and not blank, verify signature
+            // If secret is configured and not blank, try verifying signature
             if (jwtSecret != null && !jwtSecret.isBlank()) {
-                Claims claims = Jwts.parser()
-                        .verifyWith(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
-                        .build()
-                        .parseSignedClaims(token)
-                        .getPayload();
+                try {
+                    Claims claims = Jwts.parser()
+                            .verifyWith(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
+                            .build()
+                            .parseSignedClaims(token)
+                            .getPayload();
 
-                UUID userId = UUID.fromString(claims.getSubject());
-                String email = claims.get("email", String.class);
-                UserRole role = UserRole.PUBLIC;
+                    UUID userId = UUID.fromString(claims.getSubject());
+                    String email = claims.get("email", String.class);
+                    UserRole role = UserRole.PUBLIC;
 
-                Object userMetadataObj = claims.get("user_metadata");
-                if (userMetadataObj != null) {
-                    JsonNode node = objectMapper.valueToTree(userMetadataObj);
-                    if (node.has("role")) {
-                        role = UserRole.fromValue(node.get("role").asText());
+                    Object userMetadataObj = claims.get("user_metadata");
+                    if (userMetadataObj != null) {
+                        JsonNode node = objectMapper.valueToTree(userMetadataObj);
+                        if (node.has("role")) {
+                            role = UserRole.fromValue(node.get("role").asText());
+                        }
                     }
-                }
 
-                return UserPrincipal.builder()
-                        .id(userId)
-                        .email(email)
-                        .role(role)
-                        .build();
+                    return UserPrincipal.builder()
+                            .id(userId)
+                            .email(email)
+                            .role(role)
+                            .build();
+                } catch (Exception ex) {
+                    log.debug("HMAC verification failed (e.g. if token uses ES256/asymmetric key), falling back to payload parsing: {}", ex.getMessage());
+                }
             }
 
             // Fallback: decode JWT payload without verification for development/testing

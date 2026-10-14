@@ -32,7 +32,6 @@ public class HotelEntity {
     @Column(name = "slug", nullable = false, unique = true)
     private String slug;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "venue_type", nullable = false)
     private VenueType venueType;
 
@@ -65,7 +64,6 @@ public class HotelEntity {
     @Builder.Default
     private Integer operatingDaysPerWeek = 7;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
     private OrgStatus status = OrgStatus.APPROVED;

@@ -53,7 +53,6 @@ public class NgoEntity {
     @Builder.Default
     private BigDecimal trustScore = BigDecimal.valueOf(1.0);
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
     private OrgStatus status = OrgStatus.APPROVED;

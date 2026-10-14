@@ -32,7 +32,6 @@ public class ListingEntity {
     @Column(name = "description", columnDefinition = "text")
     private String description;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "diet", nullable = false)
     private FoodDiet diet;
 
@@ -52,7 +51,6 @@ public class ListingEntity {
     @Builder.Default
     private Boolean safetyConfirmed = true;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
     private ListingStatus status = ListingStatus.POSTED;

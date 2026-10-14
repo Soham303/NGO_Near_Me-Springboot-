@@ -32,7 +32,6 @@ public class FlagEntity {
     @Builder.Default
     private String source = "auto";
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
     private FlagStatus status = FlagStatus.OPEN;

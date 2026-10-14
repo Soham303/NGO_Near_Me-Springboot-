@@ -31,7 +31,6 @@ public class PickupEntity {
     @Column(name = "volunteer_id")
     private UUID volunteerId;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
     private PickupStatus status = PickupStatus.CLAIMED;
