@@ -4,6 +4,7 @@ import com.foodrescue.dto.CreateListingRequest;
 import com.foodrescue.dto.ListingResponse;
 import com.foodrescue.entity.HotelEntity;
 import com.foodrescue.entity.ListingEntity;
+import com.foodrescue.entity.enums.FoodDiet;
 import com.foodrescue.entity.enums.ListingStatus;
 import com.foodrescue.repository.HotelRepository;
 import com.foodrescue.repository.ListingRepository;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -24,6 +26,7 @@ public class ListingService {
 
     private final ListingRepository listingRepository;
     private final HotelRepository hotelRepository;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<ListingResponse> getAllListings(ListingStatus status) {
@@ -40,19 +43,35 @@ public class ListingService {
     }
 
     @Transactional(readOnly = true)
-    public List<ListingResponse> getNearbyListings(double lat, double lng, double radiusKm) {
+    public List<ListingResponse> getNearbyListings(double lat, double lng, double radiusKm,
+                                                    FoodDiet diet, int minPortions, Integer maxMinutesLeft) {
         List<ListingEntity> nearbyEntities = listingRepository.findNearbyListings(lat, lng, radiusKm, Instant.now());
         Map<UUID, HotelEntity> hotelMap = hotelRepository.findAll().stream()
                 .collect(Collectors.toMap(HotelEntity::getId, Function.identity(), (h1, h2) -> h1));
 
-        return nearbyEntities.stream().map(entity -> {
-            HotelEntity hotel = hotelMap.get(entity.getHotelId());
-            Double distance = null;
-            if (hotel != null && hotel.getLat() != null && hotel.getLng() != null) {
-                distance = calculateHaversineKm(lat, lng, hotel.getLat(), hotel.getLng());
-            }
-            return toResponse(entity, hotel, distance);
-        }).collect(Collectors.toList());
+        Instant maxPickupBy = maxMinutesLeft != null
+                ? Instant.now().plus(maxMinutesLeft, ChronoUnit.MINUTES)
+                : null;
+
+        return nearbyEntities.stream()
+                .filter(e -> diet == null || e.getDiet() == diet)
+                .filter(e -> e.getPortionsListed() >= minPortions)
+                .filter(e -> maxPickupBy == null || e.getPickupBy().isBefore(maxPickupBy))
+                .map(entity -> {
+                    HotelEntity hotel = hotelMap.get(entity.getHotelId());
+                    Double distance = null;
+                    if (hotel != null && hotel.getLat() != null && hotel.getLng() != null) {
+                        distance = calculateHaversineKm(lat, lng, hotel.getLat(), hotel.getLng());
+                    }
+                    return toResponse(entity, hotel, distance);
+                })
+                .collect(Collectors.toList());
+    }
+
+    /** Backward-compat overload */
+    @Transactional(readOnly = true)
+    public List<ListingResponse> getNearbyListings(double lat, double lng, double radiusKm) {
+        return getNearbyListings(lat, lng, radiusKm, null, 0, null);
     }
 
     @Transactional(readOnly = true)
@@ -86,6 +105,16 @@ public class ListingService {
                 .build();
 
         entity = listingRepository.save(entity);
+
+        // Notify nearby NGOs
+        if (notificationService != null) {
+            try {
+                notificationService.notifyNewListing(entity);
+            } catch (Exception e) {
+                // non-critical
+            }
+        }
+
         return toResponse(entity, hotel, null);
     }
 
@@ -120,13 +149,13 @@ public class ListingService {
                 .build();
     }
 
-    private double calculateHaversineKm(double lat1, double lon1, double lat2, double lon2) {
+    private double calculateHaversineKm(double lat1, double lng1, double lat2, double lng2) {
+        final double R = 6371.0;
         double dLat = Math.toRadians(lat2 - lat1);
-        double dLon = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return Math.round((6371 * c) * 10.0) / 10.0;
+        double dLng = Math.toRadians(lng2 - lng1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 }

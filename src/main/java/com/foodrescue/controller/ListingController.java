@@ -3,6 +3,7 @@ package com.foodrescue.controller;
 import com.foodrescue.dto.ApiResponse;
 import com.foodrescue.dto.CreateListingRequest;
 import com.foodrescue.dto.ListingResponse;
+import com.foodrescue.entity.enums.FoodDiet;
 import com.foodrescue.entity.enums.ListingStatus;
 import com.foodrescue.service.ListingService;
 import jakarta.validation.Valid;
@@ -31,8 +32,12 @@ public class ListingController {
     public ResponseEntity<ApiResponse<List<ListingResponse>>> getNearbyListings(
             @RequestParam("lat") double lat,
             @RequestParam("lng") double lng,
-            @RequestParam(value = "radiusKm", defaultValue = "10.0") double radiusKm) {
-        List<ListingResponse> listings = listingService.getNearbyListings(lat, lng, radiusKm);
+            @RequestParam(value = "radiusKm", defaultValue = "10.0") double radiusKm,
+            @RequestParam(value = "diet", required = false) FoodDiet diet,
+            @RequestParam(value = "minPortions", defaultValue = "0") int minPortions,
+            @RequestParam(value = "maxMinutesLeft", required = false) Integer maxMinutesLeft) {
+        List<ListingResponse> listings = listingService.getNearbyListings(lat, lng, radiusKm,
+                diet, minPortions, maxMinutesLeft);
         return ResponseEntity.ok(ApiResponse.ok(listings));
     }
 

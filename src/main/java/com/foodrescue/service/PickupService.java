@@ -31,6 +31,7 @@ public class PickupService {
     private final LocationPingRepository locationPingRepository;
     private final PickupTagRepository pickupTagRepository;
     private final FlagRepository flagRepository;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<PickupResponse> getAllPickups() {
@@ -95,6 +96,15 @@ public class PickupService {
                 .build();
         pickup = pickupRepository.save(pickup);
 
+        try {
+            notificationService.notifyClaimConfirmed(pickup);
+            if (request.getVolunteerId() != null) {
+                notificationService.notifyVolunteerAssigned(pickup);
+            }
+        } catch (Exception e) {
+            log.error("Failed to send notification on claim", e);
+        }
+
         HotelEntity hotel = hotelRepository.findById(listing.getHotelId()).orElse(null);
         NgoEntity ngo = ngoRepository.findById(request.getNgoId()).orElse(null);
         VolunteerEntity vol = (request.getVolunteerId() != null) ? volunteerRepository.findById(request.getVolunteerId()).orElse(null) : null;
@@ -130,6 +140,12 @@ public class PickupService {
         pickup.setCurrentLng(77.6321);
         pickup.setEtaMinutes(8);
         pickupRepository.save(pickup);
+
+        try {
+            notificationService.notifyOnTheWay(pickup);
+        } catch (Exception e) {
+            log.error("Failed to send notification on start trip", e);
+        }
     }
 
     @Transactional
@@ -163,6 +179,13 @@ public class PickupService {
         pickup.setCollectedAt(Instant.now());
         pickup.setCollectedInGeofence(inGeofence);
         pickupRepository.save(pickup);
+
+        try {
+            notificationService.notifyCollected(pickup);
+            notificationService.notifyReportDue(pickup);
+        } catch (Exception e) {
+            log.error("Failed to send notification on handoff", e);
+        }
     }
 
     @Transactional
@@ -225,6 +248,12 @@ public class PickupService {
                 .orElseThrow(() -> new IllegalArgumentException("Pickup not found"));
         pickup.setVolunteerId(volunteerId);
         pickupRepository.save(pickup);
+
+        try {
+            notificationService.notifyVolunteerAssigned(pickup);
+        } catch (Exception e) {
+            log.error("Failed to send notification on assign volunteer", e);
+        }
     }
 
     private PickupResponse toResponse(PickupEntity p, ListingEntity listing, HotelEntity hotel,
