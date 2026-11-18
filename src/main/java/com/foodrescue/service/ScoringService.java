@@ -69,14 +69,14 @@ public class ScoringService {
             }
         }
 
-        double rescueRate = (totalPortionsListed > 0) ? Math.min(1.0, (double) portionsRescued / totalPortionsListed) : 0.95;
+        double rescueRate = (totalPortionsListed > 0) ? Math.min(1.0, (double) portionsRescued / totalPortionsListed) : (completedPickups > 0 ? 0.95 : 0.0);
         double participation = Math.min(1.0, completedPickups / 10.0);
-        double listingAccuracy = 0.95;
-        double handoffQuality = 0.92;
+        double listingAccuracy = completedPickups > 0 ? 0.95 : 0.0;
+        double handoffQuality = completedPickups > 0 ? 0.92 : 0.0;
 
         // Weights: 40% rescue rate, 25% participation, 20% accuracy, 15% handoff quality
         double composite = (rescueRate * 40.0) + (participation * 25.0) + (listingAccuracy * 20.0) + (handoffQuality * 15.0);
-        composite = Math.max(10.0, Math.min(100.0, composite));
+        composite = (completedPickups > 0) ? Math.max(10.0, Math.min(100.0, composite)) : 0.0;
 
         String tier;
         if (composite >= 85.0) {
