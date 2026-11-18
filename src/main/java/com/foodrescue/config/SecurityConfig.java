@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/api/badge/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
                 
                 // Read operations for master data, public listings, news & leaderboard
                 .requestMatchers(HttpMethod.GET, "/api/listings/**").permitAll()
@@ -40,6 +41,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/tags/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/news/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/scores/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/certificates/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/live/**").permitAll()
                 
                 // Allow OPTIONS preflight
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

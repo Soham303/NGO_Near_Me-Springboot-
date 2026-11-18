@@ -32,6 +32,7 @@ public class ScheduledJobsService {
     private final LocationPingRepository locationPingRepository;
     private final HotelRepository hotelRepository;
     private final ScoringService scoringService;
+    private final CertificateService certificateService;
 
     /**
      * Every minute: expire listings whose pickup_by has passed.
@@ -162,6 +163,22 @@ public class ScheduledJobsService {
             log.info("[Scheduler] Weekly score snapshot complete");
         } catch (Exception e) {
             log.error("[Scheduler] Error in weeklyScoreSnapshot job", e);
+        }
+    }
+
+    /**
+     * 1st of every month at 1am: generate certificates for all hotels for the previous month.
+     */
+    @Scheduled(cron = "0 0 1 1 * *")
+    @Transactional
+    public void generateMonthlyCertificates() {
+        try {
+            java.time.LocalDate prevMonth = java.time.LocalDate.now().minusMonths(1).withDayOfMonth(1);
+            log.info("[Scheduler] Generating monthly certificates for {}", prevMonth);
+            certificateService.generateCertificatesForAllHotels(prevMonth);
+            log.info("[Scheduler] Monthly certificates generation complete");
+        } catch (Exception e) {
+            log.error("[Scheduler] Error in generateMonthlyCertificates job", e);
         }
     }
 }
